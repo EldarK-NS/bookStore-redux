@@ -1,70 +1,85 @@
-# Getting Started with Create React App
+структура проекта
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+/actions/-action creators
+/reducers/ -reducers
+/services/
+/utils/
+/components/
+   /app
+   /pages
+   /error-boundry
+   /error-indicator
+   /spinner
+   /bookstore-service-context
+   /hoc
 
-## Available Scripts
 
-In the project directory, you can run:
+   Большинству приложений необходимы вспомогательные компоненты:
+   -ErrorBoundry
+   -контекст
+   -HOC (high order components) для работы с контекстом (withXyzService)
+Эти вспомогательные компоннеты лучше создать сразу.
 
-### `npm start`
+Создаем Service
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Создаем context api
+React.createContext() - возвращает provider, consumer
+/* здесь мы просто создаем провайдер и консьюмер, придаем им удобные имена. дальше мы будем их отправлять в необходимые
+ компоненты, провайдер уйдет как обертка всей структуры компонентов и в него как параметр будет передано то что нужно спустить вниз, а консьюмер будет перемещен туда где необходимо получить определенные параметры, переданные как пропсы из провайдера,
+ при этом консьюмер через функцию возвращает переданные параметры <Consumer>{(переданные параметры)=>return( <Component/>)} </Consumer> - переход в HOC*/
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Создаем HOC на основе context
+/* hoc - это компонент который представляет из себя функцию которая возвращает другую функцию которая принимает 
+компонент который будем оборачивать, тоесть в компоненте высшего порядка мы создаем новый компонент*/
+/* - (переход из bookstore-service-context)- Здесь мы передали наш Consumer и создали HOC
+const withПереданныйПараметр=(Wrapped)=>{
+    return (props){
+            return <Wrapped {... this.props}/>
+    }
+}
+const MyWrappedComponent=hoc(InnerComponent)
 
-### `npm test`
+Создаем reducer, action creator, store
+>Для того что бы создать Redux приложение нужно  определить функцию -reducer
+>Функция action creator не обязательна, но на парктике присутствует всегда
+>Логику создания store нужно вынести в отдельный файл
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Структура проекта:
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './components/app/index';
+import { Provider } from 'react-redux'
+import { BrowserRouter as Router } from 'react-router-dom'
+import ErrorBoundry from './../error-boundry/error-boundry'
+import BookstoreService from './services/bookstore-service';
+import { BookstoreServiceProvider } from './components/bookstore-service-context'
+import store from './store';
 
-### `npm run build`
+const bookstoreService = new BookstoreService()
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+ReactDOM.render(
+    <Provider store={store}>
+        <ErrorBoundry>
+            <BookstoreServiceProvider value={bookstoreService}>
+                <Router>
+                <App />
+                </Router>
+            </BookstoreServiceProvider>
+        </ErrorBoundry>
+    </Provider>,
+     document.getElementById('root')
+);
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+все компоненты в APP будут чез Router иметь доступ к роутингу, через BookstoreServiceProvider иметь доступ к bookstoreService (бд), если в этих компонентах будут происходить ошибки их будет отлавливать ErrorBoundry и все компоненты ниже по иерархии будут иметь доступ к redux-store через Provider и смогут через dispatch обновлять store
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+// Предоставляет доступ к Redux store
+<Provider store={store}>
+// Обработка ошибок в компонентах ниже
+<ErrorBoundry>
+//Передает сервис через Context API
+<ServiceProvider value={service}>
+//Router из пакета react-router
+ <Router>
+ // Само приложение 
+ <App>
