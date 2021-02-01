@@ -43,7 +43,7 @@ const MyWrappedComponent=hoc(InnerComponent)
 >Для того что бы создать Redux приложение нужно  определить функцию -reducer
 >Функция action creator не обязательна, но на парктике присутствует всегда
 >Логику создания store нужно вынести в отдельный файл
-
+------------------------------------------------------------------------------
 Структура проекта:
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -83,3 +83,23 @@ ReactDOM.render(
  <Router>
  // Само приложение 
  <App>
+---------------------------------------------------------------------------
+Чтение данных из Redux store
+Дляя того чтобы принимающий компонент BoorList мог читать данные state  из store необходимо использовать компонент HOC - функцию connect()
+эта функция импортируется import { connect } from 'react-redux'; 
+connect имеет два аргумента (mapStateToProps, mapDispatchToProps )
+mapStateToProps - позоляет читать state из store
+
+mapStateToProps - это функция которая принимает state и возвращает объект с новым значением state- это функция которая определяет какие свойства 
+получит компоннет из Redux
+
+const mapStateToProps = (state) => {
+    return {
+        books: state.books
+    }
+
+при этом connect - это компонент который оборачивает собой текущий - принимающий компонент :
+
+export default connect(mapStateToProps)(BookList)
+------------------------------------------------------------------------
+Отправка действий:
