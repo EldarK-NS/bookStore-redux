@@ -85,7 +85,7 @@ ReactDOM.render(
  <App>
 ---------------------------------------------------------------------------
 Чтение данных из Redux store
-Дляя того чтобы принимающий компонент BoorList мог читать данные state  из store необходимо использовать компонент HOC - функцию connect()
+Для того чтобы принимающий компонент BoorList мог читать данные state  из store необходимо использовать компонент HOC - функцию connect()
 эта функция импортируется import { connect } from 'react-redux'; 
 connect имеет два аргумента (mapStateToProps, mapDispatchToProps )
 mapStateToProps - позоляет читать state из store
@@ -103,3 +103,36 @@ const mapStateToProps = (state) => {
 export default connect(mapStateToProps)(BookList)
 ------------------------------------------------------------------------
 Отправка действий:
+Для того чтобы взять данные из БД через service и отправить их в store т.е обновить наши state в redux store необходимо воспользоваться компонентом высшего порядка (hoc)   withBookstoreService -( который в свою очередь через context(provider,consumer) получает эти данные через пропсы из сервиса )
+
+в функции componentDidMount() {
+    //здесь мы получаем необходимые данные
+
+     const { bookstoreService } = this.props;
+        const data = bookstoreService.getBooks();
+//здесь запускаем функцию отправки
+
+           this.props.booksLoaded(data)
+    }
+
+    также нам необходим второй аргумент connect-mapDispatchToProps() - который схож по дейстию с setState(){}
+    
+    const mapDispatchToProps = (dispatch) => {
+    return {
+        booksLoaded: (newBooks) => {
+            dispatch({
+                type: 'BOOKS_LOADED',
+                payload: newBooks
+            });
+        }
+    };
+};
+по факту hoc withBookstoreService() - является 2-й оберткой для нащего компонента,
+export default withBookstoreService()(connect(mapStateToProps, mapDispatchToProps)(BookList));
+
+Итого : connect() выполняет след функции:
+1. mapStateToProps - читает initial state- и выводит его на стр или используется еще для чего то
+
+2.mapDispatchToProps - получает данные из БД и передает их в store, обновляя initial state
+
+3. mapStateToProps - читает обновленный state из store и выводит его на стр или используется еще для чего то
