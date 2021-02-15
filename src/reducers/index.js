@@ -7,7 +7,55 @@ const initialState = {
 
 }
 
+const updateCartItems = (cartItems, item, idx) => {
+  if (item.count === 0) {
+    return [
+      ...cartItems.slice(0, idx),
+      ...cartItems.slice(idx + 1)
+    ]
+  }
+  if (idx === -1) {
+    return [
+      ...cartItems,
+      item
+    ]
+  }
+  else {
+    return [
+      ...cartItems.slice(0, idx),
+      item,
+      ...cartItems.slice(idx + 1)
+    ]
+  }
+}
+
+const updateCartItem = (book, item = {}, quantity) => {
+
+  const { id = book.id, title = book.title, count = 0, total = 0 } = item
+  return {
+    id,
+    title,
+    count: count + quantity,
+    total: total + quantity * book.price
+  }
+}
+
+const updateOrder = (state, bookId, quantity) => {
+  const { books, cartItems } = state
+
+  // const bookId = action.payload;
+  const book = books.find(({ id }) => id === bookId);
+  const itemIndex = cartItems.findIndex(({ id }) => id === bookId);
+  const item = cartItems[itemIndex];
+  const newItem = updateCartItem(book, item, quantity);
+  return {
+    ...state,
+    cartItems: updateCartItems(cartItems, newItem, itemIndex)
+  }
+}
+
 const reducer = (state = initialState, action) => {
+  console.log(action.type)
   switch (action.type) {
     case 'FETCH_BOOKS_REQUEST':
       return {
@@ -24,55 +72,24 @@ const reducer = (state = initialState, action) => {
         loading: false,
         error: null
       };
-    case 'FETCH_BOOKS_FAILURE':
 
+    case 'FETCH_BOOKS_FAILURE':
       return {
         ...state,
         books: action.payload,
         loading: false,
         error: action.payload
       };
-    case 'BOOK_ADDED_TO_CART':
-      const bookId = action.payload;
-      const book = state.books.find((book) => book.id === bookId);
-      const itemIndex = state.cartItems.findIndex(({ id }) => id === bookId);
-      const item = state.cartItems[itemIndex];
-      let newItem;
 
-      if (item) {
-        newItem = {
-          ...item,
-          count: item.count + 1,
-          total: item.total + book.price
-        }
-      }
-      else {
-        newItem = {
-          id: book.id,
-          title: book.title, // ключ name изменен на title
-          count: 1,
-          total: book.price
-        }
-      }
-      if (itemIndex < 0) {
-        return {
-          ...state,
-          cartItems: [
-            ...state.cartItems,
-            newItem
-          ]
-        }
-      }
-      else {
-        return {
-          ...state,
-          cartItems: [
-            ...state.cartItems.slice(0, itemIndex),
-            newItem,
-            ...state.cartItems.slice(itemIndex + 1)
-          ]
-        }
-      }
+    case 'BOOK_ADDED_TO_CART':
+      return updateOrder(state, action.payload, 1)
+
+    case 'BOOK_REMOVE_FROM_CART':
+      return updateOrder(state, action.payload, -1)
+
+    case 'ALL_BOOKS_ADDED_TO_CART':
+      const item = state.cartItems.find(({ id }) => id === action.payload)
+      return updateOrder(state, action.payload, -item.count)
     default:
       return state
   }

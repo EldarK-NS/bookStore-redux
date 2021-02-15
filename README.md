@@ -613,7 +613,7 @@ return{
     } }
   здесь также можно использовать bindActionCreators()
 
-7. B reducer добавляем новый case:Б
+7. B reducer добавляем новый case:
 <case 'BOOK_ADDED_TO_CART':    
 
 //получаем id книги через клик 
@@ -622,7 +622,7 @@ return{
 // находим эту книгу 
 <const book = state.books.find((book) => book.id === bookId)
 
-// создаем новый новый Item и указываем какаф информация для него нам нужна
+// создаем новый новый Item и указываем какая информация для него нам нужна
 <const newItem = {
         id: book.id,
         name: book.title,
@@ -654,6 +654,7 @@ return{
  # Обновление элементов массива
 
  все обновления массива происходят непосредственно в reducer
+
 
 мы через метод findIndex() в cartItems ищем индекс элемента у которого id точно такой же как у добавляемого элемента;
 <const itemIndex = state.cartItems.findIndex(({ id }) => id === bookId);
@@ -701,5 +702,161 @@ return{
         }
       }
 
+Метод slice() возвращает новый массив, содержащий копию части исходного массива.
+   
 
 (else )здесь мы  выдергиваем из массива cartItems старый newItem и вставляем новый модифицированный
+
+ далее мы производим рефакторинг:
+
+<const updateCartItems = (cartItems, item, idx) => {
+  if (idx === -1) {
+    return [
+      ...cartItems,
+      item
+    ]
+  }
+  else {
+    return [
+      ...cartItems.slice(0, idx),
+      item,
+      ...cartItems.slice(idx + 1)
+    ]
+  }
+}
+
+<const updateCartItem = (book, item = {}) => {
+  const { id = book.id, tittle = book.title, count = 0, total = 0 } = item
+  return {
+    id,
+    title,
+    count: count + 1,
+    total: total + book.price
+  }
+}
+
+  <case 'BOOK_ADDED_TO_CART':
+      const bookId = action.payload;
+      const book = state.books.find((book) => book.id === bookId);
+      const itemIndex = state.cartItems.findIndex(({ id }) => id === bookId);
+      const item = state.cartItems[itemIndex];
+      const newItem = updateCartItem(book, item);
+      return {
+        ...state,
+        cartItems: updateCartItems(state.cartItems, newItem, itemIndex)
+      }
+
+      закончил урок 19
+
+***---------------------------------------------------------------***
+
+# Удаление элементов из массива
+
+так как при навешивании событий на кнопки, сразу листенер передавал информацию об Id элемента на котором произошло событие 
+в компоненте:
+<button onClick={() => onIncrease(id)}>
+            <i className="fa fa-plus-circle" />
+</button>
+ то при пердаче события в store, отображается информация на каком элементе произошло событие
+
+ в АС создаем новый action-creator:
+<export const bookAddedToCart = (bookId) => {
+    return {
+        type: 'BOOK_ADDED_TO_CART',
+        payload: bookId
+    }
+}
+в данном случае bookId - доп свойство указывающее на определелнный элемент
+
+импортируем в компонент необходимые AC, и передаем их через:
+<const mapDispatchToProps = {
+  onIncrease: bookAddedToCart,
+  onDecrease: bookRemoveFromCart,
+  onDelete: allBooksRemoveFromCart
+} 
+
+в данном случае мы используем объектный метод mapDispatchToProps() и просто передаем АС как объект
+
+в reducer добавляем новый action так как большинство действий(удаление. добавление и уменьшение ко-ва) схожи по своему процессу, они были объеденены в единные функции
+для удаления в функцию **updateCartItem** был добавлен доп аргумент "quantity" который указывает на количесвто которое необходимо добавить, либо удалить
+<const initialState = {
+  books: [],
+  loading: true,
+  error: null,
+  cartItems: [],
+  orderTotal: 250
+}
+const updateCartItems = (cartItems, item, idx) => {
+  if (item.count === 0) {
+    return [
+      ...cartItems.slice(0, idx),
+      ...cartItems.slice(idx + 1)
+    ]
+  }
+  if (idx === -1) {
+    return [
+      ...cartItems,
+      item
+    ]
+  }
+  else {
+    return [
+      ...cartItems.slice(0, idx),
+      item,
+      ...cartItems.slice(idx + 1)
+    ]
+  }
+}
+
+<const updateCartItem = (book, item = {}, quantity) => {
+  const { id = book.id, title = book.title, count = 0, total = 0 } = item
+  return {
+    id,
+    title,
+    count: count + quantity,
+    total: total + quantity * book.price
+  }
+}
+
+<const updateOrder = (state, bookId, quantity) => {
+  const { books, cartItems } = state
+
+  // const bookId = action.payload;
+  const book = books.find(({ id }) => id === bookId);
+  const itemIndex = cartItems.findIndex(({ id }) => id === bookId);
+  const item = cartItems[itemIndex];
+  const newItem = updateCartItem(book, item, quantity);
+  return {
+    ...state,
+    cartItems: updateCartItems(cartItems, newItem, itemIndex)
+  }
+}
+
+<const reducer = (state = initialState, action) => {
+  console.log(action.type)
+  switch (action.type) {
+    case 'BOOK_ADDED_TO_CART':
+      return updateOrder(state, action.payload, 1)
+
+    case 'BOOK_REMOVE_FROM_CART':
+      return updateOrder(state, action.payload, -1)
+
+    case 'ALL_BOOKS_ADDED_TO_CART':
+      const item = state.cartItems.find(({ id }) => id === action.payload)
+      return updateOrder(state, action.payload, -item.count)
+    default:
+      return state
+  }
+}
+export default reducer;
+
+удаление самого элемента произошло по схожей схеме с изменением существующего элемента, через метод slice():
+
+case DELETE_FROM_ARRAY:
+const {index}=action.payload
+return{
+  items:[
+    ...state.items.slice(0, index),
+    ...state.items.slice(index+1)
+  ]
+}

@@ -1,4 +1,5 @@
 const booksLoaded = (newBooks) => {
+
     return {
         type: 'FETCH_BOOKS_SUCCESS',
         payload: newBooks
@@ -16,13 +17,26 @@ const booksError = (error) => {
     }
 }
 
-export const bookAddedToCart=(bookId)=>{
-    console.log(bookId)
-return{
-    type:'BOOK_ADDED_TO_CART',
-    payload:bookId    
+export const bookAddedToCart = (bookId) => {
+    return {
+        type: 'BOOK_ADDED_TO_CART',
+        payload: bookId
+    }
 }
+export const bookRemoveFromCart = (bookId) => {
+    return {
+        type: 'BOOK_REMOVE_FROM_CART',
+        payload: bookId
+    }
 }
+export const allBooksRemoveFromCart = (bookId) => {
+    return {
+        type: 'ALL_BOOKS_ADDED_TO_CART',
+        payload: bookId
+    }
+}
+
+
 // здесь мы вынесли эту функцию из компоннета BookList так как все ее дейчтвия связаны только с АС
 const fetchBooks = (bookstoreService, dispatch) => () => {
     dispatch(booksRequested());
