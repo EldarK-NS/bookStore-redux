@@ -73,13 +73,10 @@ const reducer = (state = initialState, action) => {
           ]
         }
       }
-
     default:
       return state
   }
-
 }
-
 
 export default reducer;
 

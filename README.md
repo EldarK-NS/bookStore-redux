@@ -653,4 +653,53 @@ return{
 
  # Обновление элементов массива
 
- 
+ все обновления массива происходят непосредственно в reducer
+
+мы через метод findIndex() в cartItems ищем индекс элемента у которого id точно такой же как у добавляемого элемента;
+<const itemIndex = state.cartItems.findIndex(({ id }) => id === bookId);
+
+и вводим новую переменную item, которая выдаст нам индекс элемента либо если искомого элемента в массиве не существует findIndex() вернет -1 (undefined)
+<const item = state.cartItems[itemIndex];
+
+теперь у нас есть элемент кот нужно обновить если он существует в массиве
+и если этот элемент уже находится в массиве, мы не сможем его изменить на прямую, мы только можем читать его, поэтому нам нужно будет создать новый объект-элемент для существующего элемента, с новыми значениями ключей, либо внести в массив совершенно новый элемент
+
+<if (item) {
+        newItem = {
+          ...item,
+          count: item.count + 1,
+          total: item.total + book.price
+        }
+      }
+ else {
+        newItem = {
+          id: book.id,
+          title: book.title, 
+          count: 1,
+          total: book.price
+        }
+      }
+
+      и теперь нам нужно вернуть state  с новыми данными, ...state - все прежние элементы state, ...state.cartItems- все прежние элементы cartItems + newItem - новый элемент
+<if (itemIndex < 0) {
+        return {
+          ...state,
+          cartItems: [
+            ...state.cartItems,
+            newItem
+          ]
+        }
+      }
+      else {
+        return {
+          ...state,
+          cartItems: [
+            ...state.cartItems.slice(0, itemIndex),
+            newItem,
+            ...state.cartItems.slice(itemIndex + 1)
+          ]
+        }
+      }
+
+
+(else )здесь мы  выдергиваем из массива cartItems старый newItem и вставляем новый модифицированный
